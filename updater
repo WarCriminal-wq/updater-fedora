@@ -1,0 +1,405 @@
+#!/bin/bash
+# definitely not POSIX compliant but who cares, nothing is anymore.
+banner(){
+  echo "██╗   ██╗██████╗ ██████╗  █████╗ ████████╗███████╗██████╗ "
+  echo "██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔══██╗"
+  echo "██║   ██║██████╔╝██║  ██║███████║   ██║   █████╗  ██████╔╝"
+  echo "██║   ██║██╔═══╝ ██║  ██║██╔══██║   ██║   ██╔══╝  ██╔══██╗"
+  echo "╚██████╔╝██║     ██████╔╝██║  ██║   ██║   ███████╗██║  ██║"
+  echo " ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝"
+  echo " Version 1.0                                   By Jonny L "
+}
+
+main(){ 
+    clear
+    banner
+    echo "================================================================"
+    echo "                     updater starting..."
+    echo "================================================================"
+    echo ""
+    echo -ne '##################                                         (33%)\r'
+    sleep 1
+    echo -ne '#############################################              (66%)\r'
+    sleep 1
+    echo -ne '###########################################################(100%)\r'
+    echo -ne '\n'
+    clear
+    landing 
+}
+
+landing(){
+  banner 
+  echo ""
+  echo -e "1) update dnf                2) upgrade all packages"
+  echo -e "3) system info               4) network"
+  echo -e "5) configure dnf"            
+  echo -e "6) install package(s)        7) uninstall package(s)"
+  echo -e "8) command summary           9) system performance"
+  echo -e "10) verify dependencies"
+  echo -e "E) exit"  
+  echo -e "Choose:"
+  read -e EPSTEIN
+  controls
+}
+
+controls(){
+  case $EPSTEIN in
+    "E" | "e")
+      clear
+      clear 
+      echo "Thanks for using UPDATER!"
+      exit 0
+      ;;
+    "1")
+      update_dnf
+      ;;
+    "2")
+      upgrade_packages
+      ;;
+    "3")
+      system_info
+      ;;
+    "4")
+      network_info 
+      ;;
+    "5")
+      configure_dnf
+      ;;
+    "6")
+      install_packages
+      ;;
+    "7")
+      uninstall_packages
+      ;;
+    "8")
+      summary
+      ;;
+    "9")
+      system_performance
+      ;;
+    *)
+      clear 
+      echo "INVALID INPUT"
+      sleep 2
+      clear
+      landing
+      ;;
+  esac
+}
+
+update_dnf(){
+  clear 
+  sudo dnf check-update
+  return_to_landing
+}
+
+upgrade_packages(){
+  clear 
+  sudo dnf upgrade -y
+  return_to_landing
+}
+
+system_info(){
+  clear 
+  neofetch
+  return_to_landing
+}
+
+network_info(){
+    clear 
+    echo "1) Real time speed (bmon)"
+    echo "2) view packets"
+    echo "3) test internet connection"
+    echo "4) speedtest"
+    echo "5) view network interfaces"
+    echo "E) return"
+    echo "Choose:"
+    read -e NETWORK 
+    case $NETWORK in
+        "E" | "e" )
+          clear
+          landing 
+          ;;
+        "1")
+          bmon 
+          clear
+          return_to_network
+          ;;
+        "2")
+          select_interface
+          clear
+          return_to_network
+          ;;
+        "3")
+          clear 
+          ping google.com
+          return_to_network
+          ;; 
+        "4")
+          clear 
+          speedtest-cli
+          return_to_network
+            ;;
+        "5")
+          clear 
+          clear
+          ip addr
+          return_to_network
+          ;;  
+        *)
+            clear 
+            echo "INVALID INPUT"
+            sleep 2
+            clear
+            network_info
+            ;;
+    esac
+        
+}
+
+select_interface() {
+  interfaces=($(ip -o link show | awk -F': ' '{print $2}'))
+  options=()
+  for i in "${!interfaces[@]}"; do
+    options+=("$((i+1))" "${interfaces[i]}")
+  done
+
+  interface=$(dialog --clear --title "Select interface" --menu "Choose an option:" 15 40 7 "${options[@]}" 2>&1 >/dev/tty)
+
+  if [[ $? -eq 0 ]]; then
+    interface=${interfaces[$((interface-1))]}
+    clear
+    sudo tshark -i $interface
+  else
+    echo "Selection cancelled."
+  fi
+}
+
+configure_dnf(){
+  clear 
+  echo "current repositories:"
+  dnf repolist
+  echo "1) add repository       2) remove repository"
+  echo "E) exit"
+  read -e configure 
+  case $configure in
+    "E" | "e" )
+    clear 
+    echo "exiting..."
+    sleep 3
+    landing
+    ;;
+    "1" )
+    clear
+    clear
+    add_repository
+    ;;
+    "2" )
+    clear 
+    remove_repository
+    ;;
+  esac 
+}
+
+add_repository(){
+  echo "Enter the repository to add (e.g., https://example.com/repo/fedora.repo):"
+  read -e repo
+  clear
+  clear
+  echo "Repository to add: $repo"
+  echo "Confirm:"
+  echo "yY) yes nN) no eE) exit"
+  read -e confirm
+  case $confirm in
+    "y" | "Y" )
+    sudo dnf config-manager --add-repo $repo
+    sudo dnf check-update
+    ;;
+    "n" | "N" )
+    clear
+    clear
+    echo "aborting..."
+    sleep 2
+    add_repository
+    ;;
+    "e" | "E" )
+    clear
+    clear
+    echo "returning..."
+    sleep 2
+    clear
+    clear
+    configure_dnf
+    ;;
+  esac
+}
+
+remove_repository(){
+  echo "Enter the repository to remove:"
+  read -e repo
+  clear
+  clear
+  echo "Repository to remove: $repo"
+  echo "Confirm:"
+  echo "yY) yes nN) no eE) exit"
+  read -e confirm
+  case $confirm in
+    "y" | "Y" )
+    sudo dnf config-manager --disable $repo
+    sudo dnf check-update
+    ;;
+    "n" | "N" )
+    clear
+    clear
+    echo "aborting..."
+    sleep 2
+    remove_repository
+    ;;
+    "e" | "E" )
+    clear
+    clear
+    echo "returning..."
+    sleep 2
+    clear
+    clear
+    configure_dnf
+    ;;
+  esac
+}
+
+install_packages(){
+  clear 
+  clear 
+  echo "package to install:"
+  read -e install 
+  case $install in
+    "exit" )
+      clear
+      clear 
+      echo "aborting..."
+      sleep 1
+      clear
+      landing
+      ;;
+  esac 
+  clear
+  echo "to be installed:"
+  dnf info $install 
+  read -e install2
+  case $install2 in
+    "y" | "Y" )
+    clear
+    sudo dnf install $install 
+    echo "installed."
+    sleep 3
+    clear
+    landing
+    ;;
+    "n" | "N" )
+    clear
+    clear
+    echo "aborting..."
+    sleep 2
+    install_packages
+    ;;
+    "e" | "E" )
+    clear
+    clear
+    echo "returning..."
+    sleep 2
+    clear
+    clear
+    configure_dnf
+    ;;
+  esac
+}
+
+uninstall_packages(){
+  clear 
+  clear 
+  echo "package to uninstall:"
+  read -e uninstall 
+  case $uninstall in
+    "exit" )
+      clear
+      clear 
+      echo "aborting..."
+      sleep 1
+      clear
+      landing
+      ;;
+  esac 
+  clear
+  echo "to be uninstalled:"
+  dnf info $uninstall 
+  read -e uninstall2
+  case $uninstall2 in
+    "y" | "Y" )
+    clear
+    sudo dnf remove $uninstall 
+    echo "uninstalled."
+    sleep 3
+    clear
+    landing
+    ;;
+    "n" | "N" )
+    clear
+    clear
+    echo "aborting..."
+    sleep 2
+    uninstall_packages
+    ;;
+    "e" | "E" )
+    clear
+    clear
+    echo "returning..."
+    sleep 2
+    clear
+    clear
+    configure_dnf
+    ;;
+  esac
+}
+
+summary(){
+  clear
+  echo "enter the command you want summarized"
+  read -e SUMMARY
+  clear
+  tldr $SUMMARY 
+  return_to_landing
+}
+
+system_performance(){
+  btop
+  clear
+  clear
+  return_to_landing 
+
+}
+
+return_to_landing(){
+  echo "press any key to return"
+  read -e DIDDY
+  case $DIDDY in 
+    *) 
+      clear 
+      landing 
+  esac
+}
+
+return_to_network(){
+  echo "press any key to return"
+  read -e NRETURN
+  case $NRETURN in 
+    *)
+      clear
+      network_info
+  esac
+}
+
+if [ "$EUID" -ne 0 ]; then
+  echo "This script requires root privileges. Please run it with sudo or as root."
+  exit 1
+fi
+main
