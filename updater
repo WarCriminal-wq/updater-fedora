@@ -309,7 +309,7 @@ install_packages(){
     sleep 2
     clear
     clear
-    configure_dnf
+    install_packages
     ;;
   esac
 }
@@ -356,7 +356,7 @@ uninstall_packages(){
     sleep 2
     clear
     clear
-    configure_dnf
+    uninstall_packages
     ;;
   esac
 }
