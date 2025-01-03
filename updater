@@ -371,7 +371,7 @@ summary(){
 }
 
 system_performance(){
-  btop
+  btop --utf-force
   clear
   clear
   return_to_landing 
