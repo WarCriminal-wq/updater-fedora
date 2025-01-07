@@ -77,6 +77,9 @@ controls(){
     "9")
       system_performance
       ;;
+    "10")
+      verify_install
+      ;;
     *)
       clear 
       echo "INVALID INPUT"
@@ -87,6 +90,24 @@ controls(){
   esac
 }
 
+verify_install(){
+  clear
+  echo "Verifying dependencies..."
+
+  # List of required commands
+  dependencies=("brew" "fastfetch" "bmon" "termshark" "speedtest" "dialog" "tldr")
+
+  # Check each dependency
+  for cmd in "${dependencies[@]}"; do
+    if ! command -v $cmd &> /dev/null; then
+      echo "Dependency missing: $cmd"
+    else
+      echo "Dependency found: $cmd"
+    fi
+  done
+
+  return_to_landing
+}
 update_dnf(){
   clear 
   sudo dnf check-update
