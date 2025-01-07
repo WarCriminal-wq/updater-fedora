@@ -95,7 +95,7 @@ verify_install(){
   echo "Verifying dependencies..."
 
   # List of required commands
-  dependencies=("brew" "fastfetch" "bmon" "termshark" "speedtest" "dialog" "tldr")
+  dependencies=("dnf" "fastfetch" "bmon" "termshark" "speedtest" "dialog" "tldr")
 
   # Check each dependency
   for cmd in "${dependencies[@]}"; do
@@ -291,6 +291,7 @@ remove_repository(){
 install_packages(){
   clear 
   clear 
+  echo "Type 'exit' to quit."
   echo "package to install:"
   read -e install 
   case $install in
@@ -306,6 +307,7 @@ install_packages(){
   clear
   echo "to be installed:"
   dnf info $install 
+  echo "yY) yes nN) no"
   read -e install2
   case $install2 in
     "y" | "Y" )
@@ -338,6 +340,7 @@ install_packages(){
 uninstall_packages(){
   clear 
   clear 
+  echo "Type 'exit' to quit."
   echo "package to uninstall:"
   read -e uninstall 
   case $uninstall in
@@ -352,7 +355,8 @@ uninstall_packages(){
   esac 
   clear
   echo "to be uninstalled:"
-  dnf info $uninstall 
+  dnf info $uninstall
+  echo "yY) yes nN) no"
   read -e uninstall2
   case $uninstall2 in
     "y" | "Y" )
